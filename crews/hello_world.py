@@ -1,6 +1,5 @@
 import sys
 
-# CrewAI logs emoji. The Windows console defaults to cp1252 and would crash on them.
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 

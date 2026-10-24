@@ -1,8 +1,4 @@
-"""Runs the Affordability crew and checks the agent really used the tool.
 
-Place this file at: al-ai-engine/crews/test_affordability_crew.py
-Run from the project root:  python crews\\test_affordability_crew.py
-"""
 import re
 import sys
 from pathlib import Path
@@ -25,7 +21,6 @@ applicant = {
     "first_time_buyer": True,
 }
 
-# Ground truth straight from the deterministic code
 expected = assess_affordability(**applicant)
 print("\n=== GROUND TRUTH (direct function call) ===")
 print(expected)
@@ -34,7 +29,6 @@ result = str(build_affordability_crew(applicant).kickoff())
 print("\n=== AGENT OUTPUT ===")
 print(result)
 
-# Verification: did the agent report the real numbers, or invent its own?
 digits = re.sub(r"[,\s]", "", result)
 checks = {
     "monthly_repayment": f"{expected['monthly_repayment']:.2f}",
@@ -42,7 +36,6 @@ checks = {
 }
 print("\n=== VERIFICATION ===")
 for name, value in checks.items():
-    # accept 0.8889 or 88.89% style for ratios
     found = value in digits
     if name == "ltv" and not found:
         found = f"{expected['ltv_ratio'] * 100:.2f}" in digits

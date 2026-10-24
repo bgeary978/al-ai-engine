@@ -43,7 +43,9 @@ def assess_affordability(
     lti_ratio = requested_loan_amount / gross_annual_income
 
     # --- Irish Central Bank macroprudential limits ---
-    max_ltv = 0.90 if first_time_buyer else 0.80
+    # Owner-occupier LTV cap is 90% for every buyer.
+    # LTI is 4.0x for first-time buyers and 3.5x for others.
+    max_ltv = 0.90
     max_lti = 4.0 if first_time_buyer else 3.5
 
     flags = []

@@ -1,15 +1,4 @@
-"""Underwriting Strategist Agent on a CLOUD LLM (OpenAI).
 
-Place this file at: al-ai-engine/crews/strategist_crew.py
-
-Needs two lines in al-ai-engine/.env:
-  OPENAI_API_KEY=...
-  OPENAI_MODEL=...      (a chat model name from your OpenAI account)
-
-The Strategist has NO tools. It reads the outputs of the Affordability and
-Valuation agents and decides Approve / Conditionally Approve / Decline, then
-writes a credit memo that only uses figures it was given.
-"""
 import json
 import os
 import sys
@@ -22,11 +11,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv  
 
 load_dotenv(PROJECT_ROOT / ".env")
 
-from crewai import Agent, Task, Crew, LLM  # noqa: E402
+from crewai import Agent, Task, Crew, LLM 
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 if not os.getenv("OPENAI_API_KEY") or not OPENAI_MODEL:
@@ -35,7 +24,6 @@ if not os.getenv("OPENAI_API_KEY") or not OPENAI_MODEL:
         "(see the instructions that came with this file)."
     )
 
-# No temperature set on purpose: some newer OpenAI models reject it.
 cloud_llm = LLM(
     model=f"openai/{OPENAI_MODEL}",
     api_key=os.getenv("OPENAI_API_KEY"),

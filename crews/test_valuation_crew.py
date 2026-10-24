@@ -1,8 +1,4 @@
-"""Runs the Valuation crew (cloud LLM) and checks it used the tool honestly.
 
-Place this file at: al-ai-engine/crews/test_valuation_crew.py
-Run from the project root:  python crews\\test_valuation_crew.py
-"""
 import re
 import sys
 from pathlib import Path
@@ -11,11 +7,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from agents.valuation_agent import assess_valuation  # noqa: E402
-from tools.al_tools import _get_model  # noqa: E402
-from crews.valuation_crew import build_valuation_crew  # noqa: E402
+from agents.valuation_agent import assess_valuation  
+from tools.al_tools import _get_model  
+from crews.valuation_crew import build_valuation_crew  
 
-# Same property you tested through the Flask API earlier (expected: overvalued).
 prop = {
     "property_type": "House",
     "county": "Dublin",

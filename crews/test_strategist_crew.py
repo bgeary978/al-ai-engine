@@ -1,11 +1,4 @@
-"""Tests the Strategist (OpenAI) on three scenarios with known correct decisions.
 
-Place this file at: al-ai-engine/crews/test_strategist_crew.py
-Run from the project root:  python crews\\test_strategist_crew.py
-
-The Affordability and Valuation inputs come straight from your tested Python
-functions, so the only thing being tested here is the Strategist's decision.
-"""
 import json
 import re
 import sys

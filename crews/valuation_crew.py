@@ -1,17 +1,3 @@
-"""Valuation Agent as a CrewAI agent on a CLOUD LLM (Groq).
-
-Place this file at: al-ai-engine/crews/valuation_crew.py
-
-Groq is reached through its OpenAI-compatible endpoint using CrewAI's native
-"openai/" provider. (The LiteLLM route fails with a 'cache_breakpoint' error
-on CrewAI 1.15.27.)
-
-To switch cloud provider later, change the LLM(...) block below, e.g.
-  Gemini:    LLM(model="gemini/<model-name>")        needs GEMINI_API_KEY
-  Anthropic: LLM(model="anthropic/<model-name>")     needs ANTHROPIC_API_KEY
-  OpenAI:    LLM(model="openai/<model-name>")        needs OPENAI_API_KEY
-Check the current model names in each provider's console.
-"""
 import os
 import sys
 from pathlib import Path
@@ -23,14 +9,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv 
 
-load_dotenv(PROJECT_ROOT / ".env")  # loads GROQ_API_KEY
+load_dotenv(PROJECT_ROOT / ".env")  
 
-from crewai import Agent, Task, Crew, LLM  # noqa: E402
-from tools.al_tools import valuation_tool  # noqa: E402
+from crewai import Agent, Task, Crew, LLM 
+from tools.al_tools import valuation_tool 
 
-# Check the exact current model name in the Groq console if this errors.
 GROQ_MODEL = "openai/gpt-oss-120b"
 
 cloud_llm = LLM(

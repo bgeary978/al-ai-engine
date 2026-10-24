@@ -1,11 +1,7 @@
-"""Affordability Agent as a CrewAI agent on the LOCAL Ollama model.
 
-Place this file at: al-ai-engine/crews/affordability_crew.py
-"""
 import sys
 from pathlib import Path
 
-# Windows console fix (CrewAI prints emoji)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -13,13 +9,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from crewai import Agent, Task, Crew, LLM  # noqa: E402
-from tools.al_tools import affordability_tool  # noqa: E402
+from crewai import Agent, Task, Crew, LLM  
+from tools.al_tools import affordability_tool
 
 local_llm = LLM(
     model="ollama/llama3.1",
     base_url="http://localhost:11434",
-    temperature=0.1,  # low = more consistent tool use
+    temperature=0.1,  
 )
 
 
