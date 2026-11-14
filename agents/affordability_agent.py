@@ -24,27 +24,21 @@ def assess_affordability(
     if requested_loan_amount > property_value:
         raise ValueError("requested_loan_amount cannot exceed property_value")
 
-    # --- Monthly mortgage repayment (standard amortization formula) ---
     monthly_rate = (interest_rate / 100) / 12
     num_payments = term_years * 12
     monthly_repayment = (
         requested_loan_amount * monthly_rate * (1 + monthly_rate) ** num_payments
     ) / ((1 + monthly_rate) ** num_payments - 1)
 
-    # --- DTI: total monthly debt obligations / gross monthly income ---
     gross_monthly_income = gross_annual_income / 12
     total_monthly_debt = existing_monthly_debts + monthly_repayment
     dti_ratio = total_monthly_debt / gross_monthly_income
 
-    # --- LTV: loan amount / property value ---
     ltv_ratio = requested_loan_amount / property_value
 
-    # --- LTI: loan amount / gross annual income (Central Bank uses this too) ---
     lti_ratio = requested_loan_amount / gross_annual_income
 
-    # --- Irish Central Bank macroprudential limits ---
-    # Owner-occupier LTV cap is 90% for every buyer.
-    # LTI is 4.0x for first-time buyers and 3.5x for others.
+ 
     max_ltv = 0.90
     max_lti = 4.0 if first_time_buyer else 3.5
 

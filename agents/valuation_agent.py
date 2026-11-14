@@ -12,13 +12,13 @@ def assess_valuation(
     area_grouped,
     asking_price
 ):
-    # --- Input validation ---
+  
     if asking_price <= 0:
         raise ValueError("asking_price must be greater than 0")
     if floor_area <= 0:
         raise ValueError("floor_area must be greater than 0")
 
-    # --- Build input for the model (asking_price is NOT part of this) ---
+    
     input_df = pd.DataFrame([{
         'Property Type': property_type,
         'County': county,
@@ -29,11 +29,11 @@ def assess_valuation(
         'Area_grouped': area_grouped
     }])
 
-    # --- Get the model's predicted value ---
+    
     log_prediction = model.predict(input_df)[0]
     predicted_value = np.expm1(log_prediction)
 
-    # --- Compare asking price against predicted value ---
+   
     difference = asking_price - predicted_value
     percentage_different = (difference / predicted_value) * 100
 

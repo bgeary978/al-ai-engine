@@ -40,7 +40,7 @@ LENDING_POLICY = (
 )
 
 
-def build_strategist_crew(affordability: dict, valuation: dict) -> Crew:
+def build_strategist_crew(affordability: dict, valuation: dict, macro_context: str = "") -> Crew:
     strategist = Agent(
         role="Underwriting Strategist",
         goal=(
@@ -64,9 +64,18 @@ def build_strategist_crew(affordability: dict, valuation: dict) -> Crew:
             f"{json.dumps(affordability, indent=2)}\n\n"
             "VALUATION ASSESSMENT (JSON):\n"
             f"{json.dumps(valuation, indent=2)}\n\n"
-            "Apply the policy to decide. Then write a credit memo of 3 to 5 "
-            "sentences explaining the decision using only figures from the two "
-            "assessments above."
+            + (
+                f"{macro_context}\n\n"
+                "Apply the policy to decide. The market context does not override "
+                "that policy. Then write a credit memo of 3 to 5 sentences explaining "
+                "the decision using only figures from the assessments and the market "
+                "context above."
+                if macro_context
+                else
+                "Apply the policy to decide. Then write a credit memo of 3 to 5 "
+                "sentences explaining the decision using only figures from the two "
+                "assessments above."
+            )
         ),
         expected_output=(
             "Return ONLY a JSON object with these keys: decision (exactly one of "
