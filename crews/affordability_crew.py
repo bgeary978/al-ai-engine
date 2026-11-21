@@ -14,7 +14,7 @@ from tools.al_tools import affordability_tool
 
 local_llm = LLM(
     model="ollama/llama3.1",
-    base_url="http://localhost:11434",
+    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),,
     temperature=0.1,  
 )
 

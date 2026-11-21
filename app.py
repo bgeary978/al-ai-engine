@@ -10,7 +10,18 @@ from agents.valuation_agent import assess_valuation
 
 app = Flask(__name__)
 CORS(app)
-model = joblib.load('models/rf_pipeline.joblib')
+@app.get('/health')
+def health():
+    return 'ok'
+import os
+from huggingface_hub import hf_hub_download
+
+model_path = hf_hub_download(
+    repo_id=os.environ["HF_MODEL_REPO"],
+    filename="rf_pipeline.joblib",
+    token=os.environ.get("HF_TOKEN"),
+)
+model = joblib.load(model_path)
 
 @app.route('/predict', methods=['POST'])
 def predict():
