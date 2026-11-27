@@ -363,36 +363,40 @@ def committee():
         set_model(None)
         set_valuation_cache(valuation_result)
         macro = research_market(county=data['County'])
+        
         mem("before affordability crew")
         affordability_trail = _trim_trail(
             _crew_output_text(build_affordability_crew(applicant).kickoff())
-            log_memory("after affordability crew")
         )
         mem("after affordability crew")
         gc.collect()
+
         mem("before valuation crew")
         valuation_trail = _trim_trail(
             _crew_output_text(build_valuation_crew(prop).kickoff())
-            log_memory("after valuation crew")
         )
         mem("after valuation crew")
         gc.collect()
+
         mem("before market crew")
         market_trail = _trim_trail(
             _crew_output_text(build_market_crew(data['County']).kickoff())
-            log_memory("after market crew")
         )
         mem("after market crew")
         gc.collect()
+
         mem("before strategist crew")
-        strategist_raw = _crew_output_text(build_strategist_crew(
-            affordability_result,
-            valuation_result,
-            macro.to_prompt_text(),
-        ).kickoff())
-        log_memory("after strategist crew")
+        strategist_raw = _crew_output_text(
+            build_strategist_crew(
+                affordability_result,
+                valuation_result,
+                macro.to_prompt_text(),
+            ).kickoff()
+        )
         mem("after strategist crew")
+
         decision = _parse_agent_json(strategist_raw)
+
     except RuntimeError as e:
         return jsonify({'error': str(e)}), 500
     except json.JSONDecodeError:
