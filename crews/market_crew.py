@@ -19,7 +19,7 @@ from tools.al_tools import market_research_tool
 CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes")
 
 # Second cloud provider alongside OpenAI (strategist) — Groq for market research.
-GROQ_MODEL = "gpt-oss-120b"
+GROQ_MODEL = "openai/gpt-oss-120b"
 
 cloud_llm = LLM(
     model=f"openai/{GROQ_MODEL}",
