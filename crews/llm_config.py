@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 
 from crewai import LLM
 
-GROQ_MODEL = "gpt-oss-120b"
+GROQ_MODEL = "openai/gpt-oss-120b"
 DEFAULT_OLLAMA_MODEL = "llama3.1"
 NGROK_SKIP_HEADER = {"ngrok-skip-browser-warning": "true"}
 
