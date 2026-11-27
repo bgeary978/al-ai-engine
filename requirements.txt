@@ -10,6 +10,7 @@ scipy==1.18.1
 python-dotenv==1.2.4
 requests==2.34.2
 pydantic==2.12.5
+psutil==7.2.2
 crewai==1.15.27
 openai==2.54.0
 litellm==1.106.0

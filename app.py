@@ -7,7 +7,13 @@ import joblib
 import pandas as pd
 import numpy as np
 import os
+import psutil
 from pathlib import Path
+
+
+def mem(label):
+    mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+    print(f"[MEM] {label}: {mb:.0f} MB", flush=True)
 
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download
@@ -90,6 +96,7 @@ class _ModelProxy:
 
 
 model = _ModelProxy()
+mem("startup after imports")
 
 
 def _rel_diff(a: float, b: float) -> float:
@@ -262,8 +269,11 @@ def committee():
             term_years=data.get('term_years', 30),
             first_time_buyer=data.get('first_time_buyer', False),
         )
+        mem("before get_model")
+        loaded_model = get_model()
+        mem("after get_model")
         valuation_result = assess_valuation(
-            model=get_model(),
+            model=loaded_model,
             property_type=data['Property Type'],
             county=data['County'],
             ber_rating=data['BER Rating'],
@@ -278,6 +288,7 @@ def committee():
         return jsonify({'error': str(e)}), 400
 
     release_model()
+    mem("after release_model")
 
     applicant = {
         'gross_annual_income': data['gross_annual_income'],
@@ -314,6 +325,7 @@ def committee():
     ):
         os.environ.setdefault(key, value)
     try:
+        mem("before crewai import")
         from agents.market_researcher import research_market
         from crews.affordability_crew import build_affordability_crew
         from crews.valuation_crew import build_valuation_crew
@@ -321,26 +333,35 @@ def committee():
         from crews.strategist_crew import build_strategist_crew
         from tools.al_tools import set_model, set_valuation_cache
 
+        mem("after crewai import")
         set_model(None)
         set_valuation_cache(valuation_result)
         macro = research_market(county=data['County'])
+        mem("before affordability crew")
         affordability_trail = _trim_trail(
             _crew_output_text(build_affordability_crew(applicant).kickoff())
         )
+        mem("after affordability crew")
         gc.collect()
+        mem("before valuation crew")
         valuation_trail = _trim_trail(
             _crew_output_text(build_valuation_crew(prop).kickoff())
         )
+        mem("after valuation crew")
         gc.collect()
+        mem("before market crew")
         market_trail = _trim_trail(
             _crew_output_text(build_market_crew(data['County']).kickoff())
         )
+        mem("after market crew")
         gc.collect()
+        mem("before strategist crew")
         strategist_raw = _crew_output_text(build_strategist_crew(
             affordability_result,
             valuation_result,
             macro.to_prompt_text(),
         ).kickoff())
+        mem("after strategist crew")
         decision = _parse_agent_json(strategist_raw)
     except RuntimeError as e:
         return jsonify({'error': str(e)}), 500
