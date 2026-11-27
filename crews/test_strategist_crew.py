@@ -38,7 +38,13 @@ def expected_decision(aff, val):
     """The lending policy, applied in plain Python (ground truth)."""
     if not aff["within_regulatory_limits"]:
         return "Decline"
-    if val["overvalued"]:
+    if (
+        val.get("overvalued")
+        or val.get("conservative_ltv_exceeds_90")
+        or val.get("verified_ltv_exceeds_90")
+    ):
+        return "Conditionally Approve"
+    if aff.get("warnings"):
         return "Conditionally Approve"
     return "Approve"
 
@@ -61,10 +67,11 @@ for s in SCENARIOS:
         term_years=30,
         first_time_buyer=True,
     )
+    loan = price - s["deposit"]
     val = assess_valuation(
         _get_model(), HOUSE["property_type"], HOUSE["county"], HOUSE["ber_rating"],
         HOUSE["bedrooms"], HOUSE["bathrooms"], HOUSE["floor_area"],
-        HOUSE["area_grouped"], price,
+        HOUSE["area_grouped"], price, requested_loan_amount=loan,
     )
     want = expected_decision(aff, val)
 

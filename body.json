@@ -1,0 +1,18 @@
+{
+  "gross_annual_income": 90000,
+  "existing_monthly_debts": 200,
+  "deposit": 66000,
+  "property_value": 331000,
+  "requested_loan_amount": 265000,
+  "interest_rate": 4.0,
+  "term_years": 30,
+  "first_time_buyer": true,
+  "Property Type": "Semi-D",
+  "County": "Cork",
+  "BER Rating": "B2",
+  "Number of Bedrooms": 3,
+  "Number of Bathrooms": 2,
+  "Floor Area (m2)": 110,
+  "Area_grouped": "Cork City",
+  "asking_price": 331000
+}

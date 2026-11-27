@@ -12,6 +12,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from crewai import Agent, Task, Crew, LLM  
 from tools.al_tools import affordability_tool
 
+CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes")
+
 local_llm = LLM(
     model="ollama/llama3.1",
     base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
@@ -34,7 +36,7 @@ def build_affordability_crew(applicant: dict) -> Crew:
         tools=[affordability_tool],
         llm=local_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=CREW_VERBOSE,
     )
 
     task = Task(
@@ -53,11 +55,14 @@ def build_affordability_crew(applicant: dict) -> Crew:
             "numbers returned by the tool."
         ),
         expected_output=(
-            "A short summary containing the monthly repayment, DTI, LTV and LTI "
-            "ratios exactly as returned by the tool, whether the applicant is "
-            "within regulatory limits, and any flags."
+            "A short summary containing the monthly repayment, stress-tested "
+            "repayment, DTI, LTV and LTI ratios (and the applicable max_ltv / "
+            "max_lti caps), deposit sufficiency, estimated net monthly income, "
+            "net disposable surplus, whether the applicant is within regulatory "
+            "limits, regulatory flags, and warnings — exactly as returned by "
+            "the tool."
         ),
         agent=affordability_agent,
     )
 
-    return Crew(agents=[affordability_agent], tasks=[task], verbose=True)
+    return Crew(agents=[affordability_agent], tasks=[task], verbose=CREW_VERBOSE)

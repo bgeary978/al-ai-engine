@@ -11,11 +11,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
 
 load_dotenv(PROJECT_ROOT / ".env")
 
-from crewai import Agent, Task, Crew, LLM 
+from crewai import Agent, Task, Crew, LLM
+
+CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes")
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 if not os.getenv("OPENAI_API_KEY") or not OPENAI_MODEL:
@@ -31,12 +33,20 @@ cloud_llm = LLM(
 
 LENDING_POLICY = (
     "LENDING POLICY (apply strictly, in this order):\n"
-    "1. If affordability.within_regulatory_limits is false (any flag present) "
-    "-> decision is 'Decline'.\n"
-    "2. Else if valuation.overvalued is true -> decision is "
+    "1. If affordability.within_regulatory_limits is false "
+    "(any regulatory_flags present — LTV/LTI/deposit breaches) "
+    "-> decision is 'Decline'. Soft warnings alone (high DTI, stress-test "
+    "pressure) must NOT cause a Decline.\n"
+    "2. Else if valuation.overvalued is true OR "
+    "valuation.conservative_ltv_exceeds_90 is true OR "
+    "valuation.verified_ltv_exceeds_90 is true -> decision is "
     "'Conditionally Approve', with at least one condition about an independent "
-    "valuation or renegotiating the price.\n"
-    "3. Else -> decision is 'Approve'.\n"
+    "valuation, renegotiating the price, or reducing the loan amount. Prefer "
+    "conservative_ltv (loan / min(asking, AVM)) over verified_ltv alone.\n"
+    "3. Else if affordability.warnings is a non-empty list -> decision is "
+    "'Conditionally Approve', with conditions addressing the stress-test / DTI "
+    "/ surplus warnings.\n"
+    "4. Else -> decision is 'Approve'.\n"
 )
 
 
@@ -54,7 +64,7 @@ def build_strategist_crew(affordability: dict, valuation: dict, macro_context: s
         ),
         llm=cloud_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=CREW_VERBOSE,
     )
 
     task = Task(
@@ -86,4 +96,4 @@ def build_strategist_crew(affordability: dict, valuation: dict, macro_context: s
         agent=strategist,
     )
 
-    return Crew(agents=[strategist], tasks=[task], verbose=True)
+    return Crew(agents=[strategist], tasks=[task], verbose=CREW_VERBOSE)

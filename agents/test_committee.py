@@ -30,6 +30,7 @@ BODY = {
     "deposit": 150000,
     "property_value": 690000,
     "requested_loan_amount": 540000,
+    "first_time_buyer": True,
     "Property Type": "House",
     "County": "Cork",
     "BER Rating": "D1",
@@ -51,6 +52,7 @@ SCRIPTED_MACRO = MacroContext(
 )
 AFFORDABILITY_TRAIL = "AFFORDABILITY TRAIL: calculator called"
 VALUATION_TRAIL = "VALUATION TRAIL: model called"
+MARKET_TRAIL = "MARKET TRAIL: research called"
 
 
 def check(subtask, name, ok, detail):
@@ -63,7 +65,13 @@ def check(subtask, name, ok, detail):
 def expected_decision(aff, val):
     if not aff["within_regulatory_limits"]:
         return "Decline"
-    if val["overvalued"]:
+    if (
+        val.get("overvalued")
+        or val.get("conservative_ltv_exceeds_90")
+        or val.get("verified_ltv_exceeds_90")
+    ):
+        return "Conditionally Approve"
+    if aff.get("warnings"):
         return "Conditionally Approve"
     return "Approve"
 
@@ -92,7 +100,13 @@ def install_fakes(order, captured, strategist_text):
     def fake_val_crew(prop):
         order.append("valuation_crew")
         captured["prop_county"] = prop.get("county")
+        captured["prop_loan"] = prop.get("requested_loan_amount")
         return FakeCrew(VALUATION_TRAIL)
+
+    def fake_market_crew(county):
+        order.append("market_crew")
+        captured["market_county"] = county
+        return FakeCrew(MARKET_TRAIL)
 
     def fake_strategist(affordability, valuation, macro_context=""):
         order.append("strategist_crew")
@@ -112,6 +126,10 @@ def install_fakes(order, captured, strategist_text):
     val_mod = types.ModuleType("crews.valuation_crew")
     val_mod.build_valuation_crew = fake_val_crew
     sys.modules["crews.valuation_crew"] = val_mod
+
+    market_mod = types.ModuleType("crews.market_crew")
+    market_mod.build_market_crew = fake_market_crew
+    sys.modules["crews.market_crew"] = market_mod
 
     strat_mod = types.ModuleType("crews.strategist_crew")
     strat_mod.build_strategist_crew = fake_strategist
@@ -169,6 +187,7 @@ direct_val = assess_valuation(
     BODY["Floor Area (m2)"],
     BODY["Area_grouped"],
     BODY["asking_price"],
+    requested_loan_amount=BODY["requested_loan_amount"],
 )
 want = expected_decision(direct_aff, direct_val)
 scripted_decision = {
@@ -209,6 +228,7 @@ figures_match = (
     and captured.get("applicant_rate") == 4.0
     and captured.get("applicant_term") == 30
     and captured.get("applicant_ftb") is True
+    and success_json["affordability"].get("max_ltv") == 0.9
 )
 check(
     "Subtask 2",
@@ -285,6 +305,9 @@ trail_ok = (
     and success_json["credit_memo"] == scripted_decision["credit_memo"]
     and success_json["affordability_trail"] == AFFORDABILITY_TRAIL
     and success_json["valuation_trail"] == VALUATION_TRAIL
+    and success_json["market_trail"] == MARKET_TRAIL
+    and captured.get("market_county") == "Cork"
+    and captured.get("prop_loan") == BODY["requested_loan_amount"]
 )
 check(
     "Subtask 4",
@@ -295,7 +318,8 @@ check(
         f"reasons={success_json.get('reasons')} conditions={success_json.get('conditions')} "
         f"credit_memo={success_json.get('credit_memo')!r} "
         f"affordability_trail={success_json.get('affordability_trail')!r} "
-        f"valuation_trail={success_json.get('valuation_trail')!r}"
+        f"valuation_trail={success_json.get('valuation_trail')!r} "
+        f"market_trail={success_json.get('market_trail')!r}"
     ),
 )
 

@@ -20,6 +20,7 @@ prop = {
     "floor_area": 158,
     "area_grouped": "Other",
     "asking_price": 900000,
+    "requested_loan_amount": 720000,
 }
 
 expected = assess_valuation(
@@ -27,6 +28,7 @@ expected = assess_valuation(
     prop["property_type"], prop["county"], prop["ber_rating"],
     prop["bedrooms"], prop["bathrooms"], prop["floor_area"],
     prop["area_grouped"], prop["asking_price"],
+    requested_loan_amount=prop["requested_loan_amount"],
 )
 print("\n=== GROUND TRUTH (direct function call) ===")
 print(expected)

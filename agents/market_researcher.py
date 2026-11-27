@@ -119,8 +119,10 @@ def research_market(county: str = "Ireland") -> MacroContext:
             typical_variable_mortgage_rate_pct=_first_rate(mort, ["variable"]),
             typical_fixed_mortgage_rate_pct=_first_rate(mort, ["fixed"]),
             house_price_trend=_trend(prices),
-            snippets=[r["snippet"] for r in (ecb[:2] + mort[:2] + prices[:2] + news[:2]) if r["snippet"]],
-            sources=list(dict.fromkeys(r["link"] for r in (ecb + mort + prices + news) if r["link"])),
+            snippets=[],
+            sources=list(dict.fromkeys(
+                r["link"] for r in (ecb + mort + prices + news) if r["link"]
+            ))[:5],
         )
         text = " ".join(r["snippet"].lower() for r in news)
         for kw, flag in [("rate hike", "possible rate hikes"), ("downturn", "market downturn mentioned"),

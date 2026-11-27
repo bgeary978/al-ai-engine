@@ -14,9 +14,12 @@ from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / ".env")  
 
 from crewai import Agent, Task, Crew, LLM 
-from tools.al_tools import valuation_tool 
+from tools.al_tools import valuation_tool
 
-GROQ_MODEL = "openai/gpt-oss-120b"
+CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes") 
+
+# LiteLLM/CrewAI OpenAI-compatible providers expect a single "openai/<model>" prefix.
+GROQ_MODEL = "gpt-oss-120b"
 
 cloud_llm = LLM(
     model=f"openai/{GROQ_MODEL}",
@@ -41,7 +44,7 @@ def build_valuation_crew(prop: dict) -> Crew:
         tools=[valuation_tool],
         llm=cloud_llm,
         allow_delegation=False,
-        verbose=True,
+        verbose=CREW_VERBOSE,
     )
 
     task = Task(
@@ -55,18 +58,20 @@ def build_valuation_crew(prop: dict) -> Crew:
             f"- bathrooms: {prop['bathrooms']}\n"
             f"- floor_area: {prop['floor_area']}\n"
             f"- area_grouped: {prop['area_grouped']}\n"
-            f"- asking_price: {prop['asking_price']}\n\n"
+            f"- asking_price: {prop['asking_price']}\n"
+            f"- requested_loan_amount: {prop['requested_loan_amount']}\n\n"
             "Do NOT estimate or calculate any figure yourself. Report only "
             "numbers returned by the tool."
         ),
         expected_output=(
             "Return ONLY a JSON object with these keys: predicted_value, "
-            "asking_price, percentage_difference, overvalued, undervalued "
-            "(all copied exactly from the tool output) and summary (one "
-            "plain-English sentence saying whether the asking price is fair, "
-            "overvalued or undervalued and by how much). No text outside the JSON."
+            "asking_price, percentage_difference, overvalued, undervalued, "
+            "verified_ltv, conservative_ltv (all copied exactly from the tool "
+            "output) and summary (one plain-English sentence saying whether the "
+            "asking price is fair, overvalued or undervalued and by how much, "
+            "plus the verified LTV). No text outside the JSON."
         ),
         agent=valuation_agent,
     )
 
-    return Crew(agents=[valuation_agent], tasks=[task], verbose=True)
+    return Crew(agents=[valuation_agent], tasks=[task], verbose=CREW_VERBOSE)
