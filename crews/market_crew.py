@@ -65,4 +65,10 @@ def build_market_crew(county: str) -> Crew:
         agent=researcher,
     )
 
-    return Crew(agents=[researcher], tasks=[task], verbose=CREW_VERBOSE)
+    return Crew(
+        agents=[researcher],
+        tasks=[task],
+        verbose=CREW_VERBOSE,
+        memory=False,
+        cache=False,
+    )

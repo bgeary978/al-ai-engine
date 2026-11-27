@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import gc
 import json
 import re
 import joblib
@@ -57,7 +58,38 @@ def _load_valuation_model():
     )
 
 
-model = _load_valuation_model()
+_model = None
+
+
+def get_model():
+    """Load the RF pipeline on first use so idle RSS stays lower on Render."""
+    global _model
+    if _model is None:
+        _model = _load_valuation_model()
+    return _model
+
+
+def release_model():
+    """Drop the forest so CrewAI can fit in Render's 512 MB cap."""
+    global _model
+    _model = None
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+
+
+class _ModelProxy:
+    def predict(self, *args, **kwargs):
+        return get_model().predict(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(get_model(), name)
+
+
+model = _ModelProxy()
 
 
 def _rel_diff(a: float, b: float) -> float:
@@ -231,7 +263,7 @@ def committee():
             first_time_buyer=data.get('first_time_buyer', False),
         )
         valuation_result = assess_valuation(
-            model=model,
+            model=get_model(),
             property_type=data['Property Type'],
             county=data['County'],
             ber_rating=data['BER Rating'],
@@ -244,6 +276,8 @@ def committee():
         )
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+
+    release_model()
 
     applicant = {
         'gross_annual_income': data['gross_annual_income'],
@@ -272,25 +306,36 @@ def committee():
     market_trail = None
     strategist_raw = None
     macro = None
+    set_valuation_cache = None
+    for key, value in (
+        ("CREWAI_DISABLE_TELEMETRY", "true"),
+        ("OTEL_SDK_DISABLED", "true"),
+        ("ANONYMIZED_TELEMETRY", "false"),
+    ):
+        os.environ.setdefault(key, value)
     try:
         from agents.market_researcher import research_market
         from crews.affordability_crew import build_affordability_crew
         from crews.valuation_crew import build_valuation_crew
         from crews.market_crew import build_market_crew
         from crews.strategist_crew import build_strategist_crew
-        from tools.al_tools import set_model
+        from tools.al_tools import set_model, set_valuation_cache
 
-        set_model(model)
+        set_model(None)
+        set_valuation_cache(valuation_result)
         macro = research_market(county=data['County'])
         affordability_trail = _trim_trail(
             _crew_output_text(build_affordability_crew(applicant).kickoff())
         )
+        gc.collect()
         valuation_trail = _trim_trail(
             _crew_output_text(build_valuation_crew(prop).kickoff())
         )
+        gc.collect()
         market_trail = _trim_trail(
             _crew_output_text(build_market_crew(data['County']).kickoff())
         )
+        gc.collect()
         strategist_raw = _crew_output_text(build_strategist_crew(
             affordability_result,
             valuation_result,
@@ -310,6 +355,9 @@ def committee():
             'market_trail': market_trail,
             'strategist_raw': _trim_trail(strategist_raw),
         }), 502
+    finally:
+        if set_valuation_cache is not None:
+            set_valuation_cache(None)
 
     return jsonify({
         'affordability': affordability_result,

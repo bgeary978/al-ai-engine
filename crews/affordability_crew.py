@@ -9,16 +9,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from crewai import Agent, Task, Crew, LLM  
+from dotenv import load_dotenv
+
+load_dotenv(PROJECT_ROOT / ".env")
+
+from crewai import Agent, Task, Crew
+from crews.llm_config import affordability_llm
 from tools.al_tools import affordability_tool
 
 CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes")
-
-local_llm = LLM(
-    model="ollama/llama3.1",
-    base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
-    temperature=0.1,  
-)
 
 
 def build_affordability_crew(applicant: dict) -> Crew:
@@ -34,7 +33,7 @@ def build_affordability_crew(applicant: dict) -> Crew:
             "and explain its results accurately."
         ),
         tools=[affordability_tool],
-        llm=local_llm,
+        llm=affordability_llm(),
         allow_delegation=False,
         verbose=CREW_VERBOSE,
     )
@@ -65,4 +64,10 @@ def build_affordability_crew(applicant: dict) -> Crew:
         agent=affordability_agent,
     )
 
-    return Crew(agents=[affordability_agent], tasks=[task], verbose=CREW_VERBOSE)
+    return Crew(
+        agents=[affordability_agent],
+        tasks=[task],
+        verbose=CREW_VERBOSE,
+        memory=False,
+        cache=False,
+    )

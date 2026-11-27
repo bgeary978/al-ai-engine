@@ -21,12 +21,19 @@ from agents.market_researcher import research_market  # noqa: E402
 MODEL_PATH = PROJECT_ROOT / "models" / "rf_pipeline.joblib"
 
 _model = None
+_valuation_cache = None
 
 
 def set_model(model):
     """Reuse the already-loaded Flask pipeline instead of loading a second copy."""
     global _model
     _model = model
+
+
+def set_valuation_cache(result):
+    """Serve the committee valuation JSON from RAM so the RF model can be unloaded."""
+    global _valuation_cache
+    _valuation_cache = result
 
 
 def _get_model():
@@ -92,6 +99,8 @@ def valuation_tool(
     verified_ltv and conservative_ltv. Always use this tool for any valuation
     figures."""
     try:
+        if _valuation_cache is not None:
+            return json.dumps(_valuation_cache)
         result = assess_valuation(
             _get_model(),
             property_type,

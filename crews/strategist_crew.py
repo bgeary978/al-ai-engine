@@ -96,4 +96,10 @@ def build_strategist_crew(affordability: dict, valuation: dict, macro_context: s
         agent=strategist,
     )
 
-    return Crew(agents=[strategist], tasks=[task], verbose=CREW_VERBOSE)
+    return Crew(
+        agents=[strategist],
+        tasks=[task],
+        verbose=CREW_VERBOSE,
+        memory=False,
+        cache=False,
+    )

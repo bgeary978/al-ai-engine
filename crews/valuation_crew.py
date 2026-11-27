@@ -74,4 +74,10 @@ def build_valuation_crew(prop: dict) -> Crew:
         agent=valuation_agent,
     )
 
-    return Crew(agents=[valuation_agent], tasks=[task], verbose=CREW_VERBOSE)
+    return Crew(
+        agents=[valuation_agent],
+        tasks=[task],
+        verbose=CREW_VERBOSE,
+        memory=False,
+        cache=False,
+    )
