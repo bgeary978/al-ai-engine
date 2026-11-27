@@ -19,8 +19,7 @@ from tools.al_tools import valuation_tool
 CREW_VERBOSE = os.getenv("CREW_VERBOSE", "0").lower() in ("1", "true", "yes") 
 
 # LiteLLM/CrewAI OpenAI-compatible providers expect a single "openai/<model>" prefix.
-GROQ_MODEL = "gpt-oss-120b"
-
+GROQ_MODEL = "openai/gpt-oss-120b"
 cloud_llm = LLM(
     model=f"openai/{GROQ_MODEL}",
     base_url="https://api.groq.com/openai/v1",
