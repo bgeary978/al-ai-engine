@@ -366,18 +366,21 @@ def committee():
         mem("before affordability crew")
         affordability_trail = _trim_trail(
             _crew_output_text(build_affordability_crew(applicant).kickoff())
+            log_memory("after affordability crew")
         )
         mem("after affordability crew")
         gc.collect()
         mem("before valuation crew")
         valuation_trail = _trim_trail(
             _crew_output_text(build_valuation_crew(prop).kickoff())
+            log_memory("after valuation crew")
         )
         mem("after valuation crew")
         gc.collect()
         mem("before market crew")
         market_trail = _trim_trail(
             _crew_output_text(build_market_crew(data['County']).kickoff())
+            log_memory("after market crew")
         )
         mem("after market crew")
         gc.collect()
@@ -387,6 +390,7 @@ def committee():
             valuation_result,
             macro.to_prompt_text(),
         ).kickoff())
+        log_memory("after strategist crew")
         mem("after strategist crew")
         decision = _parse_agent_json(strategist_raw)
     except RuntimeError as e:
