@@ -9,6 +9,30 @@ import numpy as np
 import os
 import psutil
 from pathlib import Path
+import threading
+
+def start_memory_monitor(interval=0.1):
+    process = psutil.Process(os.getpid())
+    peak = [0]
+    stop_event = threading.Event()
+
+    def monitor():
+        while not stop_event.is_set():
+            memory_mb = process.memory_info().rss / (1024 * 1024)
+            peak[0] = max(peak[0], memory_mb)
+            stop_event.wait(interval)
+
+    thread = threading.Thread(target=monitor, daemon=True)
+    thread.start()
+
+    def stop():
+        stop_event.set()
+        thread.join(timeout=1)
+        current_mb = process.memory_info().rss / (1024 * 1024)
+        peak[0] = max(peak[0], current_mb)
+        return peak[0]
+
+    return stop
 
 
 def mem(label):
@@ -241,6 +265,8 @@ def _macro_public(macro):
 @app.route('/committee', methods=['POST'])
 def committee():
     data = request.get_json(silent=True) or {}
+    
+    stop_memory_monitor = start_memory_monitor()
 
     required_fields = [
         'gross_annual_income', 'existing_monthly_debts', 'deposit',
@@ -377,6 +403,10 @@ def committee():
             'strategist_raw': _trim_trail(strategist_raw),
         }), 502
     finally:
+
+        peak_memory = stop_memory_monitor()
+        print(f"[MEMORY TEST] Committee peak memory: {peak_memory:.1f} MB")
+
         if set_valuation_cache is not None:
             set_valuation_cache(None)
 
